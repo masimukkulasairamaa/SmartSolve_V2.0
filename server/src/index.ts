@@ -19,15 +19,13 @@ import { governmentRouter } from "./routes/government.js";
 const app = express();
 
 /*
- * Production frontend
+ * React/Vite production frontend
  *
- * Render runs the compiled server from:
- *   /opt/render/project/src/server
+ * Render runs the server from:
+ * /opt/render/project/src/server
  *
- * The Vite frontend is built at:
- *   /opt/render/project/src/client/dist
- *
- * Therefore ../client/dist is the correct path.
+ * Vite builds the frontend to:
+ * /opt/render/project/src/client/dist
  */
 const clientDist = path.resolve(process.cwd(), "../client/dist");
 
@@ -39,13 +37,7 @@ if (config.trustProxy) {
 
 /*
  * IMPORTANT:
- * Serve the React/Vite frontend BEFORE CORS/API middleware.
- *
- * This prevents frontend assets such as:
- * /assets/index-xxxxx.js
- * /assets/index-xxxxx.css
- *
- * from being intercepted by API/error middleware.
+ * Serve the React frontend before CORS/API middleware.
  */
 app.use(express.static(clientDist));
 
@@ -76,7 +68,6 @@ app.use(
 
       return callback(new Error("Origin not allowed"));
     },
-
     methods: [
       "GET",
       "POST",
@@ -85,13 +76,11 @@ app.use(
       "DELETE",
       "OPTIONS",
     ],
-
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "X-Request-Id",
     ],
-
     maxAge: 86400,
   })
 );
@@ -136,8 +125,8 @@ app.use("/api/auth/refresh", authLimit);
 /*
  * API root
  *
- * Keep the API response under /api.
- * The root "/" belongs to the React application.
+ * Keep API information under /api.
+ * The "/" route belongs to the React frontend.
  */
 app.get("/api", (_req, res) => {
   res.json({
@@ -167,17 +156,20 @@ app.use("/api/sos", sosRouter);
 app.use("/api/government", governmentRouter);
 
 /*
- * IMPORTANT:
- * React SPA fallback.
+ * React SPA fallback
  *
- * Any non-API URL that wasn't handled above should return
- * the React application's index.html.
- *
- * This allows React Router / client-side navigation to work
- * correctly in production.
+ * Express 5 does not accept app.get("*").
+ * This middleware handles all non-API routes and sends
+ * the React index.html.
  */
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(clientDist, "index.html"));
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+
+  return res.sendFile(
+    path.join(clientDist, "index.html")
+  );
 });
 
 /*
