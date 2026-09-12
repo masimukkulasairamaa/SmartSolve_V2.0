@@ -1,0 +1,21 @@
+{
+  "name": "jharkhand-innovation-platform",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "npm --prefix client run build",
+    "build:server": "npm --prefix server run build",
+    "start": "npm --prefix server run start",
+    "db:migrate": "npm --prefix server run db:migrate",
+    "db:seed": "npm --prefix server run db:seed",
+    "validate": "node scripts/validate-release.mjs",
+    "test": "npm run validate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
